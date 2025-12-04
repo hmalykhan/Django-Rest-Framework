@@ -2,16 +2,21 @@ from django.shortcuts import render
 from .models import CarList, ShowRoomList, Review
 from django.http import JsonResponse
 from .api_files.serializers import CarSerializer, ShowRoomSerializer, ReviewSerializer
+from .api_files.permissions import AdminOrReadOnlyPermission, ReviewUserOrReadOnlyPermission
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication 
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser, DjangoModelPermissions, DjangoModelPermissionsOrAnonReadOnly
 from rest_framework import generics, mixins
 from rest_framework import viewsets 
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle, ScopedRateThrottle
+from .api_files.throttling import ReviewDetailThrottle, ReviewListThrottle
+from .api_files.pagination import ReviewListPagination 
 
 # views are the funciton which are called by the urls when url matches the urls call these view functions and these functions have all the logic. 
 
@@ -144,19 +149,28 @@ class showroomdetial_view(APIView):
     
 # Concrete View class, concrete views are the modern form of generic view in which you dont have to even override the CRUD operations view class do it itself. In generic views you may overide the get post and returive funcions if you notices for every new class the get post delete and retrieve funcitons are same here the comes the concrete veiws in concrete even dont have to override the crud funciton just define the class and inherite the funciton class and done it will allow you to do CRUD in three lines of code.
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes=[ReviewUserOrReadOnlyPermission]
+    # throttle_classes = [ReviewDetailThrottle, AnonRateThrottle]
+    throttle_classes = [ScopedRateThrottle] # not needed only throttle_sceope got to be setted here like below if using default from setting.py otherwise both got to be used.
+    throttle_scope = 'detail'
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
 
 class ReviewList(generics.ListAPIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AdminOrReadOnlyPermission]
+    throttle_classes = [ReviewListThrottle, AnonRateThrottle] #throtling means limiting the no of hit which a register and non registered user can make in the applied api. 
+    pagination_class = ReviewListPagination 
     serializer_class = ReviewSerializer
-    # def get_queryset(self):
-    #     pk = self.kwargs['pk']
-    #     return Review.objects.filter(car=pk)
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Review.objects.filter(car=pk)
 
 class ReviewCreate(generics.CreateAPIView):
     serializer_class = ReviewSerializer
-    def ger_queryset(self):
+    def get_queryset(self):
         return Review.objects.all()
 
     def perform_create(self, serializer):
@@ -167,7 +181,6 @@ class ReviewCreate(generics.CreateAPIView):
         if review_queryset.exists():
             raise ValidationError("You have already reviewed this car.")
         serializer.save(car=car, apiuser = useredit)
-        serializer.save(car=car)
 
 
 # this is the ViewSets Viewset is the class with CRUD functions written in it and you have to override them, the View set are used with the defualt urls so that with only one class both list and reviews url can get combined.

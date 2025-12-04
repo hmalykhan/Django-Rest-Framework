@@ -38,7 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cardel_app',
-    'rest_framework'
+    'user_app',
+    'rest_framework',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -123,7 +125,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST_FRAMEWORK = {
+REST_FRAMEWORK = {
 #     'DEFAULT_AUTHENTICATION_CLASSES':['rest_framework.authentication.BasicAuthentication'],
-#     'DEFAULT_PERMISSION_CLASSES':['rest_framework.permissions.IsAuthenticated']
-# }
+    # 'DEFAULT_PERMISSION_CLASSES':['rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        # 'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+                                      ],
+    # 'DEFAULT_THROTTLE_CLASSES': [ #if you want to apply throttling on specific apis then comment this out and apply them in the view.
+    #     'rest_framework.throttling.AnonRateThrottle',
+    #     'rest_framework.throttling.UserRateThrottle',
+    #     'rest_framework.throttling.ScopedRateThrottle',
+    # ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '3/day',
+        'user': '4/day',
+        "throttling_for_review_details" : "3/minutes",
+        "throttling_for_review_lists" : "4/seconds",
+        "detail":"4/seconds",
+    },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 1
+}

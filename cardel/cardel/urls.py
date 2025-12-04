@@ -19,6 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('auth/',include('rest_framework.urls', namespace='rest_framework')),    # this url let the login pop up raise if automatically not showing usually for session id.
     path('car/',include('cardel_app.urls')),
-    path('auth/',include('rest_framework.urls', namespace='rest_framework'))    # this url let the login pop up raise if automatically not showing usually for session id.
+    path('accounts/', include('user_app.api.urls'))
 ]
