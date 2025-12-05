@@ -13,6 +13,6 @@ class ReviewListOffSetPagination(LimitOffsetPagination):
     offset_query_description = 'start'
     limit_query_param = 'limitss'
 
-class ReviewListCursorPagination(CursorPaginationPagination):
+class ReviewListCursorPagination(CursorPagination):
     page_size = 3
     ordering = '-rating'

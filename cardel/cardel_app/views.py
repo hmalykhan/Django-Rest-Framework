@@ -18,7 +18,7 @@ from rest_framework.throttling import UserRateThrottle, AnonRateThrottle, Scoped
 from .api_files.throttling import ReviewDetailThrottle, ReviewListThrottle
 from .api_files.pagination import ReviewListPagination 
 
-# views are the funciton which are called by the urls when url matches the urls call these view functions and these functions have all the logic. 
+# views are the funciton which are called by the urls when url matches, urls call these view functions and these functions have all the logic. 
 
 # def car_list_view(request):
 #     cars = Carlist.objects.all()
@@ -40,7 +40,7 @@ from .api_files.pagination import ReviewListPagination
 #     return JsonResponse(data)
 
 
-# These are funciton based views. these are the special type of functions which are called the decorators.
+# These are funciton based views. these are the special type of functions which are called the decorators. function based view are rarely used.
 
 @api_view(["GET","POST"])
 def car_list_view(request):
@@ -77,8 +77,7 @@ def car_detail_view(request,pk):
         car.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# Class based view, in these views you dont have to use decorators and does has to defines the type of method like POST and GET but instead inherit a class having functions abstract functions get and post and you can override them.
-
+# Class based view, in these views you dont have to use decorators and does has to defines the type of method like POST and GET but instead inherit a class having functions abstract functions get and post and you can override them. used when very custom and dont fit CRUD apis need to be created.
 class showroom_view(APIView):
     # is you want same authentication and permission for all the classes then insted of writing this code in all the classes you need to apply authentication and permission in settings.py file.
     # authentication_classes = [SessionAuthentication]    # for session authentication you must make the auth path in project url file so that the login pop shows up in the browser.
@@ -125,7 +124,9 @@ class showroomdetial_view(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except showroom.DoesNotExist:
             return Response({'Error':"showroom does not exist"}, status = status.HTTP_404_NOT_FOUND)
-        
+
+
+# This is simple generic views this is not a type of view this is under the hood implimentationof the concrete generic class based view in inside the drf. in generic view you dont have to write the code for the get post put and delete methods generec views write code itself it will reduce code writting effort and save time.        
 # class ReviewDetailView(generics.GenericAPIView, mixins.RetrieveModelMixin):
 #     queryset = Review.objects.all()
 #     serializer_class = ReviewSerializer
@@ -133,8 +134,7 @@ class showroomdetial_view(APIView):
 #     def get(self, request, *args, **kwargs):
 #         return self.retrieve(request, *args, **kwargs)
 
-# class ReviewView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):  # This is generic views in generic view you dont have to write the code for the get post put and delete methods generec views write code itself it will reduce code writting effort and save time.
-
+# class ReviewView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
 #     queryset = Review.objects.all()
 #     serializer_class = ReviewSerializer
 
@@ -146,8 +146,10 @@ class showroomdetial_view(APIView):
     
 #     def post(self, request, *args, **kwargs):
 #         return self.create(request, *args, **kwargs)
+
     
-# Concrete View class, concrete views are the modern form of generic view in which you dont have to even override the CRUD operations view class do it itself. In generic views you may overide the get post and returive funcions if you notices for every new class the get post delete and retrieve funcitons are same here the comes the concrete veiws in concrete even dont have to override the crud funciton just define the class and inherite the funciton class and done it will allow you to do CRUD in three lines of code.
+# Concrete Generic class based View, concrete views are the modern form of generic view in which you dont have to even override the CRUD operations view class do it itself. In generic views you may overide the get post and returive funcions if you notices for every new class the get post delete and retrieve funcitons are same here the comes the concrete veiws in concrete even dont have to override the crud funciton just define the class and inherite the funciton class and done it will allow you to do CRUD in three lines of code.
+# These are most commonly used but the only flow is that we cannot combine all CRUD operations in one class and cannot combine ones of your desire. we could only choose from the options which are abailable of these ListAPIVeiw, CreateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 class ReviewDetail(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [JWTAuthentication]
     permission_classes=[ReviewUserOrReadOnlyPermission]
@@ -184,6 +186,7 @@ class ReviewCreate(generics.CreateAPIView):
 
 
 # this is the ViewSets Viewset is the class with CRUD functions written in it and you have to override them, the View set are used with the defualt urls so that with only one class both list and reviews url can get combined.
+# these are also usefel when you want to overide the CRUD operations. Group all actions for a resource in a single class, Use routers to auto-generate consistent RESTful URLs, Use actions (list, retrieve, etc.) instead of raw HTTP methods, Easily add extra actions (/approve/, /upvote/, /ban/, etc.) on the same resource.
 class ReviewViewset(viewsets.ViewSet):
 
     def list(self, request):
@@ -226,7 +229,7 @@ class ReviewViewset(viewsets.ViewSet):
 
 
 # this is the model view set this is the advancement of view set  the concept is same the only feature is that it minimize your code and write itself you just have to give inherit the model view set class and retieve all objects and serializer class with model view set only with three lines of code you write all CRUD operaions.
-
+# this is the solution of concrete generic class based view now you can combile all the CRUD operaions in one class by using modelviewset and is you want you own desired combinations you can use genetic viewset with mixins.
 class ReviewModelViewSet(viewsets.ModelViewSet): # there are tow varients ReadOnlyModelViewSet it will only give you the list and retireve function while model view set will give you all the CRUD operations.
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
